@@ -12,6 +12,26 @@ Independent exploratory research project focused on nonlinear organization behav
 
 Overview
 
+Potential Exploratory Application Areas
+
+While the framework is currently experimental and exploratory, the observed behaviors may be relevant to research or development involving:
+
+- nonlinear dynamics
+- emergent organization systems
+- GPU particle simulation
+- procedural generation
+- educational visualization
+- swarm behavior modeling
+- synthetic ecosystem experiments
+- distributed coordination systems
+- complex systems research
+- VFX / game simulation
+- large-scale particle rendering
+- self-organizing simulation environments
+
+The project is currently best understood as an exploratory deterministic organization framework capable of generating rich synthetic large-scale behaviors under tuned balancing interactions.
+
+Current work is focused on simulation research, visualization systems, parameter stability, coordinated scaling behavior, and emergent organizational dynamics rather than claims of established physical equivalence.
 This repository contains an experimental Python-based many-body simulation framework focused on deterministic balancing interactions and emergent large-scale organization behavior.
 
 The project explores how tuned attraction-like, repulsion-like, damping, and range-limited interaction rules can produce persistent structured states including:
