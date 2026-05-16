@@ -188,11 +188,9 @@ Potential future directions include:
 
 ---
 
-# WHITE PAPER
+# WHITE PAPER UNAVAILABLE 
 
-See included technical document:
 
-Deterministic_Multi_Halo_Framework_Whitepaper.pdf
 
 ---
 
