@@ -1,21 +1,25 @@
 \# Recurrence Test Summary — 2026-05-18
 
 
-## 2026-05-18 HARDENING UPDATE
+## 2026-05-18 Hardening Update
 
-These results are preserved as exploratory recurrence tests.
+These recurrence results are preserved as exploratory tests.
 
-A later hardened benchmark, MODE Recurrence Engine v2 Hardened, found that some earlier PASS results were too generous because raw replay matching can be inflated by best-window search and by local cyclic structure.
+A later hardened benchmark, **MODE Recurrence Engine v2 Hardened**, found that some earlier PASS results were too generous because raw replay matching can be inflated by best-window search, local cyclic structure, and max-search effects.
 
 Important later findings:
+
 - Ordered data still showed strong signed recurrence.
 - Full shuffle and distribution surrogate controls were beaten.
-- Block-shuffle control was NOT cleanly beaten.
-- Random max-search baseline was NOT beaten.
-- Forecasting should still be treated as unresolved despite one favorable v2 result.
+- Block-shuffle control was **not** cleanly beaten.
+- Random max-search baseline was **not** beaten.
+- Forecasting remains unresolved despite one favorable confidence-filtered result.
 
-Therefore, these files should be read as exploratory evidence of recurrence structure, not proof of reliable forecasting, hidden physics, or unique chronology detection.
+Therefore, these files should be read as exploratory evidence of recurrence structure, not proof of reliable forecasting, hidden physics, causal prediction, or unique chronology detection.
 
+Current safest interpretation:
+
+> MODE recurrence tests show that ordered temporal data can contain detectable recurrence structure, but stronger controls are required before claiming predictive usefulness or unique time-order structure.
 
 
 \## Project Context
