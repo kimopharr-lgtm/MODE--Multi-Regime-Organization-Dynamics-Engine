@@ -1,0 +1,229 @@
+# ====================================================================
+# MODE_REAL_ENGINE_OrbitGIF.py
+# PRIVATE REAL-ENGINE ORBIT GIF
+# Uses the same v1B engine force stack:
+# central attractor, phase attraction, softening, repulsion,
+# velocity repulsion, long-range dispersion, damping, virial thermostat
+# ====================================================================
+
+import os
+import math
+import random
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
+
+OUT_DIR = r"C:\Users\tukib\DMHOF_GIFS"
+OUT_FILE = os.path.join(OUT_DIR, "REAL_ENGINE_ORBIT_LIKE_MOTION.gif")
+os.makedirs(OUT_DIR, exist_ok=True)
+
+N = 180
+FRAMES = 180
+STEPS_PER_FRAME = 6
+SEED = 120
+
+DT = 0.004
+SOFT = 0.70
+
+K_CENTER = 0.042
+CENTER_MASS = 4.0
+
+K_LL = 0.010
+
+BASE_REPULSE = 0.0016
+MAX_REPULSE = 0.0020
+
+LONG_REPEL = 0.00015
+LONG_RANGE = 4.0
+
+V0 = 0.50
+DAMPING = 0.9965
+
+TARGET_VIRIAL = 0.075
+THERMOSTAT_INTERVAL = 100
+MAX_SCALE_UP = 1.10
+MAX_SCALE_DOWN = 0.85
+
+MAX_FORCE = 0.025
+
+CENTER_ORBIT_RADIUS = 1.25
+CENTER_ORBIT_RATE = 0.012
+
+random.seed(SEED)
+np.random.seed(SEED)
+
+theta = np.random.uniform(0, 2 * math.pi, N)
+rad = 2.5 * np.sqrt(np.random.uniform(0, 1, N))
+
+x = rad * np.cos(theta)
+y = rad * np.sin(theta)
+
+vx = -np.sin(theta) * 0.11 + np.random.normal(0, 0.01, N)
+vy = np.cos(theta) * 0.11 + np.random.normal(0, 0.01, N)
+
+phase_values = [0, math.pi / 2, math.pi, 3 * math.pi / 2]
+phase = np.array([phase_values[i % 4] for i in range(N)])
+colors = np.array([i % 4 for i in range(N)])
+
+step_counter = 0
+
+def kinetic_energy():
+    return 0.5 * np.sum(vx * vx + vy * vy)
+
+def counts():
+    r = np.sqrt(x * x + y * y)
+    core = int(np.sum(r < 1.5))
+    halo = int(np.sum((r >= 1.5) & (r < 6.0)))
+    escaped = int(np.sum(r >= 6.0))
+    avg_radius = float(np.mean(r))
+    return core, halo, escaped, avg_radius
+
+def center_position():
+    angle = CENTER_ORBIT_RATE * step_counter
+    cx = CENTER_ORBIT_RADIUS * math.cos(angle)
+    cy = CENTER_ORBIT_RADIUS * math.sin(angle)
+    return cx, cy
+
+def step_engine():
+    global x, y, vx, vy, step_counter
+
+    fx = np.zeros(N)
+    fy = np.zeros(N)
+    potential = 0.0
+
+    cx, cy = center_position()
+
+    dx_center = x - cx
+    dy_center = y - cy
+
+    r2_center = dx_center * dx_center + dy_center * dy_center + SOFT
+    r_center = np.sqrt(r2_center)
+
+    center_force = (K_CENTER * CENTER_MASS) / r2_center
+
+    fx += center_force * (-dx_center / r_center)
+    fy += center_force * (-dy_center / r_center)
+
+    potential += float(-np.sum((K_CENTER * CENTER_MASS) / r_center))
+
+    for i in range(N):
+        for j in range(i + 1, N):
+
+            dx = x[j] - x[i]
+            dy = y[j] - y[i]
+
+            d2 = dx * dx + dy * dy + 1e-9
+            d = math.sqrt(d2)
+
+            ux = dx / d
+            uy = dy / d
+
+            softened = d2 + SOFT
+
+            phase_term = 0.5 + 0.5 * math.cos(phase[i] - phase[j])
+
+            attraction = (K_LL * phase_term) / softened
+
+            repulsion = BASE_REPULSE / ((d2 * d2) + 0.05)
+
+            rvx = vx[j] - vx[i]
+            rvy = vy[j] - vy[i]
+            rel_v2 = rvx * rvx + rvy * rvy
+
+            dynamic_repulse = MAX_REPULSE * (
+                1.0 - math.exp(-(rel_v2 / (V0 * V0 + 1e-9)))
+            )
+
+            long_term = LONG_REPEL * math.exp(-((d / LONG_RANGE) ** 2))
+
+            net = attraction - repulsion - dynamic_repulse - long_term
+            net = max(-MAX_FORCE, min(MAX_FORCE, net))
+
+            fpx = net * ux
+            fpy = net * uy
+
+            fx[i] += fpx
+            fy[i] += fpy
+            fx[j] -= fpx
+            fy[j] -= fpy
+
+            potential += -attraction / max(d, 1e-9)
+            potential += repulsion
+            potential += dynamic_repulse
+            potential += long_term
+
+    vx = DAMPING * vx + fx * DT
+    vy = DAMPING * vy + fy * DT
+
+    x += vx * DT
+    y += vy * DT
+
+    if step_counter > 0 and step_counter % THERMOSTAT_INTERVAL == 0:
+        K = kinetic_energy()
+
+        if abs(potential) > 1e-9 and K > 1e-9:
+            virial = (2 * K) / abs(potential)
+
+            if virial < TARGET_VIRIAL:
+                desired_K = TARGET_VIRIAL * abs(potential) / 2
+                scale = math.sqrt(desired_K / K)
+                scale = min(scale, MAX_SCALE_UP)
+                vx *= scale
+                vy *= scale
+
+            elif virial > 1.0:
+                vx *= MAX_SCALE_DOWN
+                vy *= MAX_SCALE_DOWN
+
+    step_counter += 1
+    return cx, cy
+
+print("================================================")
+print("MODE ORBIT BRANCH METRICS RUN")
+print("================================================")
+print("N:", N)
+print("FRAMES:", FRAMES)
+print("STEPS_PER_FRAME:", STEPS_PER_FRAME)
+print("SEED:", SEED)
+print("K_CENTER:", K_CENTER)
+print("DAMPING:", DAMPING)
+print("================================================")
+
+total_steps = FRAMES * STEPS_PER_FRAME
+
+for s in range(total_steps + 1):
+    if s % 120 == 0:
+        core, halo, escaped, avg_radius = counts()
+        K = kinetic_energy()
+        print(
+            "step:", s,
+            "avg_radius:", round(avg_radius, 6),
+            "core:", core,
+            "halo:", halo,
+            "escaped:", escaped,
+            "kinetic:", round(float(K), 6)
+        )
+
+    if s < total_steps:
+        step_engine()
+
+core, halo, escaped, avg_radius = counts()
+
+print("------------------------------------------------")
+print("FINAL_RESULTS")
+print("------------------------------------------------")
+print("final_avg_radius:", round(avg_radius, 6))
+print("core:", core)
+print("halo:", halo)
+print("escaped:", escaped)
+
+if escaped < 20 and halo >= 50 and core >= 20:
+    classification = "PASS_ORBITING_CORE_HALO"
+elif escaped < 20 and (core + halo) >= int(0.85 * N):
+    classification = "PASS_BOUNDED_ORBIT_STRUCTURE"
+elif escaped >= int(0.50 * N):
+    classification = "FAIL_DISPERSION_ESCAPE"
+else:
+    classification = "PARTIAL_OR_FAIL"
+
+print("AUTO_CLASSIFICATION:", classification)
