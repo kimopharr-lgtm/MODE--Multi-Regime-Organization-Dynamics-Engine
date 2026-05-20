@@ -1,4 +1,4 @@
-# MODE — Multi-Organization Dynamics Engine
+# MODE — Multi-Regime Organization Dynamics Engine
 
 MODE is an exploratory deterministic many-body interaction framework investigating emergent organization behavior, bounded structures, 
 nonlinear interaction dynamics, and parameter-sensitive regime transitions.
